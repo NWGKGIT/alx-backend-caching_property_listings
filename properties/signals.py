@@ -1,12 +1,9 @@
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 from django.core.cache import cache
 from .models import Property
 
-def get_all_properties():
-    cache_key = 'all_properties'
-    properties = cache.get(cache_key)
-
-    if properties is None:
-        properties = list(Property.objects.all())  # Evaluate QuerySet before caching
-        cache.set(cache_key, properties, 3600)  # Store for 1 hour
-    
-    return properties
+@receiver(post_save, sender=Property)
+@receiver(post_delete, sender=Property)
+def clear_property_cache(sender, instance, **kwargs):
+    cache.delete('all_properties')
